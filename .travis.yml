@@ -1,0 +1,24 @@
+language: generic
+sudo: required
+
+services:
+    - docker
+
+before_install:
+    - docker build -t nekorawesh/react-test -f ./client/Dockerfile.dev ./client
+
+script:
+    - docker run -e CI=true nekorawesh/react-test npm test
+
+after_success:
+    - docker build -t nekorawesh/multi-client ./client
+    - docker build -t nekorawesh/multi-nginx ./nginx
+    - docker build -t nekorawesh/multi-server ./server
+    - docker build -t nekorawesh/multi-worker ./worker
+    # login to docker hub
+    - echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_ID" --password-stdin
+    # take images and push it to docker hub
+    - docker push nekorawesh/multi-client
+    - docker push nekorawesh/multi-nginx
+    - docker push nekorawesh/multi-server
+    - docker push nekorawesh/multi-workder
